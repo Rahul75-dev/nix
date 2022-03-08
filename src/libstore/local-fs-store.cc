@@ -99,6 +99,13 @@ std::optional<std::string> LocalFSStore::getBuildLog(const StorePath & path_)
         } catch (InvalidPath &) {
             return std::nullopt;
         }
+    } else if (settings.isExperimentalFeatureEnabled(Xp::CaDerivations)) {
+        // The build log is actually attached to the corresponding resolved
+        // derivation, so we need to get it first
+        auto drv = readDerivation(path);
+        auto resolvedDrv = drv.tryResolve(*this);
+        if (resolvedDrv)
+            path = writeDerivation(*this, *resolvedDrv);
     }
 
     auto baseName = path.to_string();
